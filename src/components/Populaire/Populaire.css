@@ -1,0 +1,36 @@
+.populaire{
+    display: flex ;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    height: 90vh;
+
+}
+.populaire h1{
+    color: #171717;
+    font-size: 35px;
+    font-weight: 600;
+    padding: 30px;
+}
+.populaire hr{
+    width: 200px;
+    height: 6px;
+    border-radius: 10px;
+    background: #252525;
+
+}
+.populaire-item{
+    margin-top: 10px;
+    display: flex;
+    gap: 30px;
+}
+.populaire-item img{
+    height: 420px;
+    width: 250px;
+}
+.title{
+    font-size: 20px;
+}
+.prix{
+    font-size: 14px;
+}

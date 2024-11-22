@@ -1,0 +1,68 @@
+/* Footer.css */
+.footer-container {
+      background-color: rgba(234, 143, 39, 0.25); /* Primary color with 40% opacity */
+
+          color: rgb(0, 0, 0);
+          padding: 10px;
+  }
+  
+  .footer-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .footer-description {
+    margin-bottom: 1rem;
+  }
+  
+  .footer-links-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+  }
+  
+  .footer-link {
+    cursor: pointer;
+    color: #555658; /* Gray-200 */
+    transition: transform 0.3s, color 0.3s;
+  }
+  
+  .footer-link:hover {
+    color: #ed8900; /* Primary color */
+    transform: translateX(0.25rem);
+  }
+  
+  .social-icons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .contact-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  /* New styles for horizontal layout */
+  .links-container {
+    display: flex; /* Use flexbox for horizontal alignment */
+    justify-content: space-between; /* Space out items evenly */
+  }
+  
+  .link-section {
+    margin-right: 2rem; /* Space between sections */
+  }
+  .copyright{
+    color: #919192;
+  }
+  .social-icon {
+    color: #fea928; /* Orange */
+  }
+  .location-icon {
+    color: #fea928; /* Orange */
+  }
+  

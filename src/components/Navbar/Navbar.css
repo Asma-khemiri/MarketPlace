@@ -1,0 +1,163 @@
+/* Navbar Container */
+.navbar-container {
+  position: relative;
+  z-index: 40;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: rgba(234, 143, 39, 0.25); /* Primary color with 40% opacity */
+  padding: 10px 0;
+}
+
+/* Navbar Content */
+.navbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+/* Logo Section */
+.logo {
+  max-width: 80px;
+}
+
+/* Navbar Menu */
+.navbar-menu {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  color: #555;
+  font-size: 18px;
+  margin: 0;
+}
+
+.page-menu {
+  color: gray;
+  text-decoration: none;
+  font-weight: bold;
+  padding-bottom: 2px;
+  transition: color 0.3s ease;
+}
+
+.page-menu:hover,
+.page-menu.active {
+  color: orangered;
+  border-bottom: 2px solid orangered;
+  padding-bottom: 2px;
+  cursor: pointer;
+}
+
+/* Right Section */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Search Bar */
+.search-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 200px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  transition: width 0.3s ease-in-out, border-color 0.3s ease-in-out;
+}
+
+.search-input:focus {
+  width: 250px;
+  border-color: #007bff;
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  color: #555;
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+/* Login and Signup Buttons */
+.login-btn,
+.signup-btn {
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.login-btn {
+  background: none;
+  color: #f1a343;
+}
+
+.login-btn:hover {
+  color: #ea5003;
+}
+
+.signup-btn {
+  background: linear-gradient(90deg, #ea5003, #141312);
+  color: white;
+}
+
+.signup-btn:hover {
+  background: linear-gradient(90deg, #f19d26, #141312);
+}
+
+/* Cart Button */
+.cart-btn {
+  background: linear-gradient(90deg, #f1a343, #f19d26);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  position: relative; /* Nécessaire pour positionner le badge */
+}
+.cart-btn .cart-badge {
+  position: absolute;
+  top: -5px; /* Ajustez la position verticale */
+  right: -5px; /* Ajustez la position horizontale */
+  width: 20px; /* Taille du badge */
+  height: 20px; /* Taille du badge */
+  background-color: (90deg, #f19d26, #ea5003);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+.cart-btn:hover {
+  background: linear-gradient(90deg, #f19d26, #ea5003);
+}
+
+.cart-text {
+  display: none;
+  font-size: 13px;
+}
+
+.cart-btn:hover .cart-text {
+  display: inline;
+}
+
+/* Responsive Design */
+@media (min-width: 640px) {
+  .search-bar-container {
+    display: flex;
+  }
+}
