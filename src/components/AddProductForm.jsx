@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import { db } from "../firebase/firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { getDocs, query, orderBy, limit } from "firebase/firestore";
 import { ShopContext } from "../context/ShopContext"; // Assurez-vous que le contexte est bien importé
 import AuthPopup from "../components/AuthPopup"; // Assurez-vous que le composant AuthPopup est bien créé
 
@@ -12,6 +13,7 @@ const AddProductForm = () => {
   const [image, setImage] = useState(null);
   const [categorie, setCategorie] = useState("");
   const [taille, setTaille] = useState("");
+  const [type, setType] = useState("");
   const { user } = useContext(ShopContext); // Vérification de l'utilisateur connecté
   const [authPopup, setAuthPopup] = useState(false); // État pour afficher le popup d'authentification
 
@@ -42,28 +44,37 @@ const AddProductForm = () => {
       toast.error("Veuillez télécharger une image valide !");
       return;
     }
+    const productsRef = collection(db, "products");
+    const q = query(productsRef, orderBy("productId", "desc"), limit(1));  // Trier par productId et récupérer le dernier
 
+    const querySnapshot = await getDocs(q);
+
+    // Déterminer le prochain ID
+    const newProductId = querySnapshot.empty ? 1 : querySnapshot.docs[0].data().productId + 1;
     // Création de l'objet produit
     const newProduct = {
-      nom: nom.trim(),
+      productName: nom.trim(),
       description: description.trim(),
-      prix: parseFloat(prix), // Convertir le prix en nombre
-      image: image ? image.name : "Aucune image", // Ajouter l'image si elle existe
-      categorie,
-      taille,
+      price: parseFloat(prix), // Convertir le prix en nombre
+      productImg: image ? image.name : "Aucune image", // Nom de l'image si elle existe
+      category: categorie,
+      type,
+      size: taille, // Tableau de tailles
+      productId: newProductId, // Nouveau ID incrémenté
     };
 
     try {
       // Ajout du produit à Firestore
-      await addDoc(collection(db, "produits"), newProduct);
+      await addDoc(collection(db, "products"), newProduct);
       toast.success("Produit ajouté avec succès !");
-      
+
       // Réinitialiser le formulaire
       setNom("");
       setDescription("");
       setPrix("");
       setImage(null);
       setCategorie("");
+      setType("");
       setTaille("");
     } catch (error) {
       console.error("Erreur lors de l'ajout du produit :", error);
@@ -74,7 +85,7 @@ const AddProductForm = () => {
   return (
     <>
       {authPopup && <AuthPopup authPopup={authPopup} setAuthPopup={setAuthPopup} />}
-      
+
       <div className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold text-center text-orange-600 mb-6">
           Ajouter un produit
@@ -151,6 +162,23 @@ const AddProductForm = () => {
               <option value="enfant">Enfant</option>
             </select>
           </div>
+          <div className="mb-4">
+          <label htmlFor="categorie" className="block text-sm font-medium text-gray-700">
+            Sous Catégorie
+          </label>
+          <select
+            id="type"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            required
+            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="">Choisir une Sous Catégorie</option>
+            <option value="homme">Vetements</option>
+            <option value="femme">OUTWEAR</option>
+            <option value="enfant">Chaussures</option>
+          </select>
+        </div>
 
           <div className="mb-4">
             <label htmlFor="taille" className="block text-sm font-medium text-gray-700">
