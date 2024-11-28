@@ -41,13 +41,9 @@ const Product = () => {
           <div className='flex itrms-center gap-1 mt-2'>
             <img src="" alt="" className="w-3-5" />
             <img src="" alt="" className="w-3-5" />
-            <img src="" alt="" className="w-3-5" />
-            <img src="" alt="" className="w-3-5" />
-            <img src="" alt="" className="w-3-5" />
-            <p>()</p>
           </div>
           <p className="text-xl font-bold mb-4">{productData.price} {currency}</p>
-          <p className=' text-gray-500 md:w-4/5'>{/*productData.description*/}</p>
+          <p className=' text-gray-500 md:w-4/5'>{productData.description}</p>
           <div className='flex flex-col gap-4 my-8'>
             <p>Size:</p>
             <div className='flex gap-2'>

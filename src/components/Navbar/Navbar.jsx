@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from 'react-router-dom'; // Utilisation de useNavigate
-import { IoMdSearch } from "react-icons/io";
 import SearchBar from "../SearchBar";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaUser } from "react-icons/fa";
@@ -8,41 +7,25 @@ import { assets } from '../../assets/assets';
 import './Navbar.css';
 import { ShopContext } from "../../context/ShopContext";
 import AuthPopup from "../AuthPopup"; // Importation du composant AuthPopup
+import { IoMdSearch } from "react-icons/io";
 
-const Navbar = ({ handleOrderPopup }) => {
+
+const Navbar = ({ handleOrderPopup, userRole }) => {
   const [menu, setMenu] = useState("home");
-  const [authPopup, setAuthPopup] = useState(false); // État pour le popup
-  const { getCartCount, isAuthenticated } = useContext(ShopContext); // Ajout de l'état d'authentification
-  const navigate = useNavigate(); // Utilisation de useNavigate pour rediriger
+  const [authPopup, setAuthPopup] = useState(false);
+  const { getCartCount, isAuthenticated } = useContext(ShopContext);
+  const navigate = useNavigate();
 
-  // Fonction pour gérer le clic sur Mon compte
+  //  gérer le clic sur Mon compte
   const handleAccountClick = () => {
     if (!isAuthenticated) {
-      setAuthPopup(true); // Afficher le popup si l'utilisateur n'est pas connecté
+      setAuthPopup(true);
     } else {
-      // Rediriger vers la page de profil si l'utilisateur est authentifié
       navigate("/profile");
     }
   };
-  // Fonction pour gérer le clic sur le panier
-  const handleCartClick = () => {
-    if (!isAuthenticated) {
-      setAuthPopup(true); // Afficher le popup si l'utilisateur n'est pas connecté
-    } else {
-      // Rediriger vers le panier si l'utilisateur est authentifié
-      navigate("/cart");
-    }
-  };
 
-  // Fonction pour gérer les clics sur les liens de la navbar
-  const handleNavClick = (path) => {
-    if (!isAuthenticated) {
-      setAuthPopup(true); // Afficher le popup si l'utilisateur n'est pas connecté
-    } else {
-      // Rediriger vers la page correspondante si l'utilisateur est authentifié
-      navigate(path);
-    }
-  };
+
 
   return (
     <div className="navbar-container">
@@ -50,27 +33,49 @@ const Navbar = ({ handleOrderPopup }) => {
         <Link to={'/'}>
           <img src={assets.logo} alt="logo" className='logo' />
         </Link>
-        <ul className="navbar-menu">
-          <Link className="page-menu" to='/' >
-            <p onClick={() => setMenu("home")} className={menu === "home" ? "active" : ""}>Accueil</p>
-          </Link>
-          <Link to='/collection' className="page-menu">
-          <p onClick={() => setMenu("collection")} className={menu === "collection" ? "active" : ""}>Collection</p>
 
+        <ul className="navbar-menu">
+          {userRole === 'admin' &&
+            <Link to='/admin-dashboard' className="page-menu">
+              <p onClick={() => setMenu("dashboard")} className={menu === "dashboard" ? "active" : ""}>Dashboard</p>
+            </Link>}
+          {userRole !== 'admin' &&
+
+            <Link className="page-menu" to='/' >
+              <p onClick={() => setMenu("home")} className={menu === "home" ? "active" : ""}>Accueil</p>
+            </Link>}
+
+          < Link to='/collection' className="page-menu">
+            <p onClick={() => setMenu("collection")} className={menu === "collection" ? "active" : ""}>Collection</p>
           </Link>
-          <Link to='/ajouter-produit' className="page-menu">
-            <p onClick={() => handleNavClick("/ajouter-produit")} className={menu === "addProduct" ? "active" : ""}>Ajouter un Produit</p>
-          </Link>
-          <Link to='/mes-produits' className="page-menu">
-            <p onClick={() => handleNavClick("/mes-produits")} className={menu === "mesProduits" ? "active" : ""}>Mes Produits</p>
-          </Link>
-          <Link to='/contact' className="page-menu">
-            <p onClick={() => handleNavClick("/contact")} className={menu === "contact" ? "active" : ""}>Contactez-Nous</p>
-          </Link>
+          {(userRole === 'admin' || userRole === 'user') &&
+            <Link to='/ajouter-produit' className="page-menu">
+              <p onClick={() => setMenu("addproduct")} className={menu === "addProduct" ? "active" : ""}>Ajouter un Produit</p>
+            </Link>}
+
+          {userRole === 'user' &&
+            <Link to='/mes-produits' className="page-menu">
+              <p onClick={() => setMenu("myproducts")} className={menu === "myproducts" ? "active" : ""}>Mes Produits</p>
+            </Link>}
+          {userRole !== 'admin' &&
+            <Link to='/contact' className="page-menu">
+              <p onClick={() => setMenu("contact")} className={menu === "contact" ? "active" : ""}>Contactez-Nous</p>
+            </Link>}
+
+
+
         </ul>
 
         <div className="navbar-right">
-          <SearchBar />
+
+        {(userRole === 'user' || userRole === 'admin') ?
+          <SearchBar />: <button
+          onClick={()=> alert("Vous devez être connecté pour faire une recherche.")}
+          className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600"
+        >
+          <IoMdSearch className="text-lg text-white" />
+        </button>}
+         
 
           <button onClick={handleAccountClick} className="cart-btn">
             <span className="cart-text">Mon compte</span>
@@ -78,7 +83,10 @@ const Navbar = ({ handleOrderPopup }) => {
           </button>
 
           <Link className="cart-btn" to='/cart'>
-            <button onClick={handleOrderPopup} className="cart-btn">
+            <button onClick={isAuthenticated ? handleOrderPopup : handleAccountClick
+
+
+            } className="cart-btn">
               <span className="cart-text">Panier</span>
               <FaCartShopping className="cart-icon" />
               <p className="cart-badge">{getCartCount()}</p>

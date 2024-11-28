@@ -109,7 +109,7 @@ export const products = [
         title: "PULL OVER",
         category: "Femme",
         type:"vetements",
-        price: 59.90 
+        price: 49.90 
     },
     {
         id: 2,
@@ -119,7 +119,7 @@ export const products = [
         category: "Homme",
         sizes: ["S","M","L"],
         type:"vetements",
-        price: 69.90 
+        price: 59.90 
     },
     {
         id: 3,
@@ -129,7 +129,7 @@ export const products = [
         category: "Femme",
         sizes: ["S","M","L"],
         type:"vetements",
-        price: 59.90
+        price: 49.90
     },
     {
         id: 4,
@@ -139,7 +139,7 @@ export const products = [
         category: "Homme",
         sizes: ["S","M","L"],
         type:"vetements",
-        price: 69.90 
+        price: 59.90 
     },
     {
         id: 5,

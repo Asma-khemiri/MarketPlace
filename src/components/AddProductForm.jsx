@@ -84,12 +84,10 @@ const AddProductForm = () => {
 
   return (
     <>
-      {authPopup && <AuthPopup authPopup={authPopup} setAuthPopup={setAuthPopup} />}
+     {/* {authPopup && <AuthPopup authPopup={authPopup} setAuthPopup={setAuthPopup} />}*/}
 
       <div className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-center text-orange-600 mb-6">
-          Ajouter un produit
-        </h2>
+        
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="nom" className="block text-sm font-medium text-gray-700">

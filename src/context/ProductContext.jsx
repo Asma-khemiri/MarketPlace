@@ -1,4 +1,4 @@
-/*import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { db, collection, getDocs } from '../firebase';  // Assure-toi que le chemin d'import est correct
 
 // Créer un Contexte pour les produits
@@ -32,4 +32,3 @@ export const ProductProvider = ({ children }) => {
 
 // Hook personnalisé pour utiliser les produits
 export const useProducts = () => useContext(ProductContext);
-*/
