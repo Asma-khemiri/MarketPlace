@@ -1,29 +1,32 @@
 import { useState, useEffect } from "react";
 import { IoCloseOutline } from "react-icons/io5";
-import { auth } from '../firebase/firebase'; // Assurez-vous que le chemin est correct
+import { auth, db } from '../firebase/firebase'; 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom'; // Importation de useNavigate
-import { toast } from 'react-hot-toast'; // Importation de react-hot-toast
-import { Toaster } from 'react-hot-toast'; // Utilisation de Toaster pour les notifications
+import { useNavigate } from 'react-router-dom'; 
+import { toast } from 'react-hot-toast'; 
+import { Toaster } from 'react-hot-toast'; 
+import { setDoc, collection, getDoc,doc } from "firebase/firestore";
 
 const AuthPopup = ({ authPopup, setAuthPopup }) => {
-  const [isSignup, setIsSignup] = useState(false); // État pour basculer entre "Se connecter" et "S'inscrire"
+  const [isSignup, setIsSignup] = useState(false); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState(''); // Seulement pour l'inscription
-  const [currentUser, setCurrentUser] = useState(null); // État pour stocker l'utilisateur connecté
-  const navigate = useNavigate(); // Initialisation de useNavigate
+  const [name, setName] = useState(''); 
+  const [currentUser, setCurrentUser] = useState(null); 
+  const [role, setRole] = useState('user'); 
+  const navigate = useNavigate(); 
 
   // Observer l'état de l'authentification de l'utilisateur
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      console.log(user)
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Fonction de gestion de l'inscription
+  // gestion de l'inscription
   const handleSignup = async () => {
     if (!email || !password || !name) {
       toast.error("Veuillez remplir tous les champs.");
@@ -32,15 +35,29 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
 
     try {
       // Création du compte Firebase
-      await createUserWithEmailAndPassword(auth, email, password);
+      const users = await createUserWithEmailAndPassword(auth, email, password);
       toast.success("Inscription réussie !");
-      setIsSignup(false); // Passer à la page de connexion après une inscription réussie
+      
+
+      // Déterminer si l'utilisateur est un admin ou un utilisateur classique
+      const role = email === "benbrahimsalma18@gmail.com" ? "admin" : "user"; 
+
+      const user = {
+        name: name,
+        role: role, 
+        email: users.user.email,
+      }
+
+      const userRef = doc(db, 'users', users.user.uid);
+      await setDoc(userRef, user);
+    ;
+      setIsSignup(false); 
     } catch (error) {
-      toast.error("Erreur lors de l'inscription : " + error.message); // Toast erreur
+      toast.error("Erreur lors de l'inscription : " + error.message); 
     }
   };
 
-  // Fonction de gestion de la connexion
+  // gestion de la connexion
   const handleLogin = async () => {
     if (!email || !password) {
       toast.error("Veuillez remplir tous les champs.");
@@ -48,12 +65,30 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
       toast.success("Connexion réussie !");
-      setAuthPopup(false); // Fermer la popup après la connexion
-      navigate('/'); // Redirection vers la page d'accueil après la connexion
+
+      // Récupérer le rôle de l'utilisateur depuis la base de données Firebase
+      const userRef = doc(db, 'users', result.user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setName(userData.name); 
+        if (userData.role === "admin") {
+          console.log("L'utilisateur est un administrateur.");
+          setRole("admin"); 
+        } else {
+          console.log("L'utilisateur est un utilisateur classique.");
+          setRole("user"); 
+        }
+      }
+
+      localStorage.setItem('user', JSON.stringify(result));
+      setAuthPopup(false); 
+      navigate('/'); 
     } catch (error) {
-      toast.error("Erreur lors de la connexion : " + error.message); // Toast erreur
+      toast.error("Erreur lors de la connexion : " + error.message);
     }
   };
 
@@ -61,8 +96,9 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast.success("Déconnexion réussie !");
-      setCurrentUser(null); // Réinitialiser l'utilisateur après la déconnexion
+      toast.success("Déconnexion réussie!");
+      setCurrentUser(null); 
+      setRole("user"); 
     } catch (error) {
       toast.error("Erreur lors de la déconnexion : " + error.message);
     }
@@ -124,7 +160,7 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
                         Vous avez déjà un compte ?{" "}
                         <span
                           className="text-orange-500 hover:underline font-medium cursor-pointer"
-                          onClick={() => setIsSignup(false)} // Passer à la page de connexion après inscription
+                          onClick={() => setIsSignup(false)} 
                         >
                           Se connecter
                         </span>
@@ -134,7 +170,7 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
                 ) : currentUser ? (
                   <>
                     {/* Afficher le nom de l'utilisateur connecté et le bouton de déconnexion */}
-                    <p>Bienvenue, {currentUser.displayName || currentUser.email}!</p>
+                    <p>Bienvenue {role === "admin" && <p>ADMIN</p>}{name || currentUser.email}!</p>
                     <button
                       onClick={handleLogout}
                       className="bg-gradient-to-r from-primary to-secondary hover:scale-105 duration-200 text-orange-500 py-1 px-4 rounded-full mt-4"
@@ -172,7 +208,7 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
                         Vous n'avez pas de compte ?{" "}
                         <span
                           className="text-orange-500 hover:underline font-medium cursor-pointer"
-                          onClick={() => setIsSignup(true)} // Passer à la page d'inscription
+                          onClick={() => setIsSignup(true)} 
                         >
                           S'inscrire
                         </span>
@@ -185,9 +221,8 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
           </div>
         </div>
       )}
-
-      {/* Utilisation de Toaster pour afficher les toasts */}
-      <Toaster />
+       {/* Utilisation de Toaster pour afficher les toasts */}
+       <Toaster />
     </>
   );
 };

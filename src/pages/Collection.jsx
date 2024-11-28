@@ -13,22 +13,18 @@ const Collection = () => {
   const [category,setCategory] = useState([]);
   const [type,setType] = useState([]);
 
-  const toggleCategory = (e) =>{
-    if(category.includes(e.target.value)){
-       setCategory(prev => prev.filter(item =>item !== e.target.value));  
-    }
-    else{
-      setCategory(prev =>[...prev,e.target.value]);
-    }
-  }
-  const toggleType = (e) =>{
-    if(type.includes(e.target.value)){
-       setType(prev => prev.filter(item =>item !== e.target.value));  
-    }
-    else{
-      setType(prev =>[...prev,e.target.value]);
-    }
-  }
+  const toggleCategory = (e) => {
+    const value = e.target.value;
+    setCategory((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
+ const toggleType = (e) => {
+    const value = e.target.value;
+    setType((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
   const applyFilter = () =>{
     let productCopy = products.slice();
     if(search){

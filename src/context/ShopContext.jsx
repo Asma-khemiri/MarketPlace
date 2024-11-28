@@ -1,15 +1,17 @@
 import React, { createContext, useState } from 'react';
-import { products } from '../assets/assets'; // Liste des produits (à fournir)
+import { products } from '../assets/assets'; 
 import toast from 'react-hot-toast';
 
 export const ShopContext = createContext();
 
 export const ShopContextProvider = ({ children }) => {
-  const currency = 'TND';  // Monnaie locale
+  const currency = 'TND';  
   const delivery_fee = 10;  // Frais de livraison
   const [search, setSearch] = useState('');  // Requête de recherche pour filtrer les produits
-  const [cartItems, setCartItems] = useState({});  // État du panier (objet avec id de produit, tailles et quantités)
+  const [cartItems, setCartItems] = useState({});  // État du panier 
+
   const [user, setUser] = useState(null); // État de l'utilisateur connecté
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Ajouter un produit au panier
   const addToCart = (itemId, size) => {
@@ -94,16 +96,16 @@ export const ShopContextProvider = ({ children }) => {
   const getCartItemsDetails = () => {
     return Object.keys(cartItems)
       .map((itemId) => {
-        const item = products.find((product) => product.id === parseInt(itemId));  // Trouver le produit par ID
+        const item = products.find((product) => product.id === parseInt(itemId));  
         if (item) {
           return {
-            ...item,  // Ajouter les informations du produit
-            sizes: cartItems[itemId],  // Ajouter les tailles et quantités
+            ...item,  
+            sizes: cartItems[itemId],  
           };
         }
-        return null;  // Retourner null si le produit n'est pas trouvé
+        return null;  
       })
-      .filter((item) => item !== null);  // Filtrer les éléments invalides
+      .filter((item) => item !== null); 
   };
 
   // Calculer le prix total du panier
@@ -126,33 +128,37 @@ export const ShopContextProvider = ({ children }) => {
 
   // Fonction de connexion
   const loginUser = (username) => {
-    setUser(username); // Mettez à jour l'état `user` avec le nom d'utilisateur
+    setUser(username); 
+    setIsAuthenticated(true);
     toast.success('Bienvenue, ' + username);
   };
 
   // Fonction de déconnexion
   const logoutUser = () => {
-    setUser(null); // Déconnecter l'utilisateur
+    setUser(null); 
+    setIsAuthenticated(false);
     toast.success('Déconnexion réussie');
   };
 
   // Valeur du contexte (les méthodes et les états accessibles dans le contexte)
   const value = {
-    products,  // Liste des produits
+    products,  
     currency,  // Monnaie
-    delivery_fee,  // Frais de livraison
-    search,  // Requête de recherche
-    setSearch,  // Mettre à jour la requête de recherche
-    cartItems,  // Articles dans le panier
-    addToCart,  // Ajouter un produit au panier
-    removeFromCart,  // Retirer un produit du panier
-    updateCartQuantity,  // Mettre à jour la quantité d'un produit
-    getCartCount,  // Nombre total d'articles
-    getCartItemsDetails,  // Détails des articles du panier
-    calculateTotalPrice,  // Calculer le prix total
-    user,  // L'utilisateur connecté
-    loginUser,  // Fonction de connexion
-    logoutUser,  // Fonction de déconnexion
+    delivery_fee,  
+    search, 
+    setSearch,  
+    cartItems, 
+    addToCart,  
+    removeFromCart,  
+    updateCartQuantity,  
+    getCartCount,  
+    getCartItemsDetails,  
+    calculateTotalPrice,  
+    user,  
+    loginUser,  
+    logoutUser,
+    isAuthenticated,
+    setIsAuthenticated 
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

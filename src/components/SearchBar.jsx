@@ -10,7 +10,7 @@ const SearchBar = ({ onSearch }) => {
   };
 
   const handleSearch = () => {
-    if (onSearch) onSearch(search); // Passes the current search input to the parent component for filtering
+    if (onSearch) onSearch(search); 
   };
 
   return (
