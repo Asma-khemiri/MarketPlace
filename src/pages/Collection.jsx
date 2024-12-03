@@ -5,7 +5,6 @@ import ProductItem from '../components/ProductItem';
 
 
 
-
 const Collection = () => {
 
   const { products,search } = useContext(ShopContext);
@@ -46,6 +45,7 @@ const Collection = () => {
   useEffect(() => {
     applyFilter();
   }, [category,type,search])
+ 
   
   return (
     

@@ -16,10 +16,13 @@ import Product from './pages/Product';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import ConfirmationPage from './pages/ConfirmationPage';
-import AddProductPage from './pages/AddProductPage';
+import AddProductForm from './pages/AddProductForm';
 import MesProduits from './pages/MesProduits';
-
+import uploadProducts from './firebase/productService';
 const App = () => {
+  useEffect(() => {
+    uploadProducts(); 
+  }, []); 
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authPopup, setAuthPopup] = useState(false); 
@@ -30,7 +33,8 @@ const App = () => {
   const handleOrderPopup = () => {
     setOrderPopup(!orderPopup); 
   };
-
+  
+ 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -72,11 +76,14 @@ const App = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
+        {/*<Route path="/contact" element={<Contact />} />*/}
+        
+
 
         {/* Admin access to AddProductPage */}
         <Route 
           path="/ajouter-produit" 
-          element={<AddProductPage />} 
+          element={<AddProductForm />} 
         />
         
         {/* MesProduits page only accessible by users */}
