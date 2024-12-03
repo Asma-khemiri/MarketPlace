@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
-import { useNavigate } from 'react-router-dom';
+import emailjs from 'emailjs-com';  
+import toast from 'react-hot-toast';
 
 const Checkout = () => {
   const {
@@ -17,12 +18,11 @@ const Checkout = () => {
     postalCode: '',
   });
 
-  const [paymentError, setPaymentError] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('card'); // Default payment method is card
+  
+  const [paymentMethod, setPaymentMethod] = useState('Carte de Crédit'); // Default payment method is card
 
   const items = getCartItemsDetails();
-  const navigate = useNavigate();
-
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -35,30 +35,52 @@ const Checkout = () => {
     setPaymentMethod(e.target.value);
   };
 
+  const sendEmail = async (formData, items, totalPrice) => {
+    const formattedItems = items.map(item => {
+      const sizeDetails = Object.entries(item.sizes)
+        .map(([size, quantity]) => `Taille(s): ${size}, nombre d'article(s) ${quantity}`)
+        .join(', ');
+      
+        return `${item.title} - ${sizeDetails}`;
+    }).join('\n'); 
+    const emailData = {
+      name: formData.name,
+      email: formData.email,
+      address: formData.address,
+      city: formData.city,
+      postalCode: formData.postalCode,
+      paymentMethod: paymentMethod,
+      items: formattedItems,
+      totalPrice: totalPrice,
+      currency: currency,
+    };
+
+    try {
+       await emailjs.send(
+        'service_xapcvwf',  //my EmailJS service ID
+        'template_qpkwe44', //my EmailJS template ID
+        emailData,
+        'lFwF6dBUMQ82nso0U' //my EmailJS user ID
+      );
+
+      toast.success('E-mail envoyé avec succès !');
+
+    } catch (error) {
+      toast.error("Une erreur s'est produite lors de l'envoi de votre e-mail.");
+
+    }
+  };
+
   const handleConfirmOrder = (event) => {
     event.preventDefault();
 
-    // Simuler la gestion des données de paiement selon la méthode choisie
-    if (paymentMethod === 'card') {
-      // Si le paiement est par carte bancaire, il faut implémenter ici la logique de paiement
-      console.log('Paiement par carte bancaire', formData);
-    } else {
-      // Si l'autre méthode de paiement est choisie, par exemple paiement à la livraison ou virement bancaire
-      console.log('Paiement via espace (virement, paiement à la livraison)', formData);
-    }
+    // Get total price
+    const totalPrice = calculateTotalPrice();
 
-    const orderData = {
-      items: items,
-      totalPrice: calculateTotalPrice(),
-      currency: currency,
-      customerDetails: formData,
-      paymentMethod: paymentMethod,
-    };
+    // Send the email via EmailJS
+    sendEmail(formData, items, totalPrice);
 
-    console.log('Order confirmed:', orderData);
-
-    // Naviguer vers la page de confirmation de commande
-    navigate('/confirmation');
+   
   };
 
   return (
@@ -151,20 +173,17 @@ const Checkout = () => {
           </span>
         </div>
 
-        {paymentError && (
-          <p className="text-red-500 text-sm mt-4">{paymentError}</p>
-        )}
 
         {/* Choix du mode de paiement */}
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-700">Choisissez votre mode de paiement</h3>
-          <div className="space-y-2 mt-2">
+          <div className="sflex space-x-4 mt-2">
             <label className="inline-flex items-center">
               <input
                 type="radio"
                 name="paymentMethod"
-                value="card"
-                checked={paymentMethod === 'card'}
+                value="Carte de Crédit"
+                checked={paymentMethod === 'Carte de Crédit'}
                 onChange={handlePaymentMethodChange}
                 className="form-radio"
               />
@@ -174,18 +193,30 @@ const Checkout = () => {
               <input
                 type="radio"
                 name="paymentMethod"
-                value="other"
-                checked={paymentMethod === 'other'}
+                value="PayPal"
+                checked={paymentMethod === 'PayPal'}
                 onChange={handlePaymentMethodChange}
                 className="form-radio"
               />
-              <span className="ml-2"> paiement à la livraison</span>
+              <span className="ml-2">PayPal</span>
             </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="Paiement à la Livraison"
+                checked={paymentMethod === 'Paiement à la Livraison'}
+                onChange={handlePaymentMethodChange}
+                className="form-radio"
+              />
+              <span className="ml-2">Paiement à la Livraison</span>
+            </label>
+            
           </div>
         </div>
 
         {/* Formulaire de paiement avec carte bancaire (si sélectionné) */}
-        {paymentMethod === 'card' && (
+        {paymentMethod === 'Carte de Crédit' && (
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-700">Entrez les informations de votre carte bancaire</h3>
             <input
@@ -206,6 +237,25 @@ const Checkout = () => {
               placeholder="CVV"
               className="w-full p-3 border border-gray-300 rounded-md mt-2"
             />
+          </div>
+        )}
+        <hr />
+         {paymentMethod === 'PayPal' && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-700">Entrez les informations de votre compte Paypal</h3>
+            <input
+              type="text"
+              name="comptePaypal"
+              placeholder="Email du Compte PayPal"
+              className="w-full p-3 border border-gray-300 rounded-md mt-2"
+            />
+            <input
+              type="text"
+              name="passwoed"
+              placeholder="Mot De Passe"
+              className="w-full p-3 border border-gray-300 rounded-md mt-2"
+            />
+           
           </div>
         )}
 

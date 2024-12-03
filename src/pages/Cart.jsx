@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
-import { useNavigate } from 'react-router-dom'; // Utilisation de useNavigate au lieu de useHistory
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const {
@@ -12,45 +12,39 @@ const Cart = () => {
   } = useContext(ShopContext);
 
   const items = getCartItemsDetails();
-  const navigate = useNavigate(); // Utilisation de useNavigate
+  const navigate = useNavigate();
 
-  // Fonction de redirection vers la page de paiement
   const handleValidateCart = () => {
-    navigate('/checkout'); // Utiliser navigate au lieu de history.push
+    navigate('/checkout');
   };
 
   return (
     <div className="min-h-screen bg-gray-100 py-10">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-        {/* Titre du panier */}
         <h2 className="text-2xl font-bold text-gray-800 border-b-2 border-orange-400 pb-4">
           Panier
         </h2>
 
-        {/* Contenu du panier */}
         {items.length === 0 ? (
           <p className="text-center text-gray-500 mt-6">Votre panier est vide.</p>
         ) : (
           <div className="space-y-6 mt-6">
-            {/* Liste des articles */}
             {items.map((item) => (
               <div
                 key={item.id}
                 className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
               >
-                {/* Image du produit */}
                 <img
                   src={item.img}
-                  alt={item.name}
+                  alt={item.title}
                   className="w-36 h-35 sm:w-49 sm:h-45 object-cover rounded-md mx-auto"
                 />
-
-                {/* Détails du produit */}
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-700">{item.title}</h3>
                   <p className="text-sm text-gray-500">
                     Prix : <span className="font-medium">{item.price} {currency}</span>
                   </p>
+
                   {Object.entries(item.sizes).map(([size, quantity]) => (
                     <div key={size} className="mt-2">
                       <p className="text-sm text-gray-600">Taille : {size}</p>
@@ -82,7 +76,6 @@ const Cart = () => {
               </div>
             ))}
 
-            {/* Affichage du total */}
             <div className="flex justify-between items-center border-t pt-4">
               <span className="text-lg font-semibold text-gray-700">Total :</span>
               <span className="text-xl font-bold text-gray-800">
@@ -92,7 +85,6 @@ const Cart = () => {
           </div>
         )}
 
-        {/* Bouton de validation */}
         {items.length > 0 && (
           <button
             onClick={handleValidateCart}
@@ -107,3 +99,5 @@ const Cart = () => {
 };
 
 export default Cart;
+
+

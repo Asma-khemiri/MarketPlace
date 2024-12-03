@@ -1,10 +1,29 @@
 import React, { createContext, useState } from 'react';
 import { products } from '../assets/assets'; 
 import toast from 'react-hot-toast';
+import { fetchProducts } from '../firebase/productService';
+import { useEffect } from 'react';
+
 
 export const ShopContext = createContext();
 
+
 export const ShopContextProvider = ({ children }) => {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const fetchedProducts = await fetchProducts(); // Fetch products from Firestore
+        setProducts(fetchedProducts); // Update state with fetched products
+      } catch (error) {
+        console.error("Error fetching products: ", error);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
   const currency = 'TND';  
   const delivery_fee = 10;  // Frais de livraison
   const [search, setSearch] = useState('');  // Requête de recherche pour filtrer les produits
@@ -14,7 +33,7 @@ export const ShopContextProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Ajouter un produit au panier
-  const addToCart = (itemId, size) => {
+  const addToCart = (docId, size) => {
     if (!size) {
       toast.error('Sélectionnez la taille du produit');
       return;
@@ -23,15 +42,15 @@ export const ShopContextProvider = ({ children }) => {
     setCartItems((prevCartItems) => {
       const cartData = { ...prevCartItems };
 
-      if (cartData[itemId]) {
+      if (cartData[docId]) {
         // Si l'article est déjà dans le panier, mettre à jour la quantité de la taille sélectionnée
-        cartData[itemId] = {
-          ...cartData[itemId],
-          [size]: (cartData[itemId][size] || 0) + 1,
+        cartData[docId] = {
+          ...cartData[docId],
+          [size]: (cartData[docId][size] || 0) + 1,
         };
       } else {
         // Si l'article n'est pas dans le panier, l'ajouter avec la taille et la quantité
-        cartData[itemId] = { [size]: 1 };
+        cartData[docId] = { [size]: 1 };
       }
 
       toast.success('Produit ajouté au panier !');
@@ -40,20 +59,20 @@ export const ShopContextProvider = ({ children }) => {
   };
 
   // Retirer un produit du panier
-  const removeFromCart = (itemId, size) => {
+  const removeFromCart = (docId, size) => {
     setCartItems((prevCartItems) => {
       const cartData = { ...prevCartItems };
-      if (cartData[itemId] && cartData[itemId][size]) {
-        const newQuantity = cartData[itemId][size] - 1;
+      if (cartData[docId] && cartData[docId][size]) {
+        const newQuantity = cartData[docId][size] - 1;
 
         if (newQuantity > 0) {
           // Réduire la quantité si elle est supérieure à 0
-          cartData[itemId] = { ...cartData[itemId], [size]: newQuantity };
+          cartData[docId] = { ...cartData[docId], [size]: newQuantity };
         } else {
           // Supprimer l'article si la quantité est 0
-          delete cartData[itemId][size];
-          if (Object.keys(cartData[itemId]).length === 0) {
-            delete cartData[itemId];  // Si aucune taille n'est encore présente, supprimer l'article
+          delete cartData[docId][size];
+          if (Object.keys(cartData[docId]).length === 0) {
+            delete cartData[docId];  // Si aucune taille n'est encore présente, supprimer l'article
           }
         }
 
@@ -64,18 +83,18 @@ export const ShopContextProvider = ({ children }) => {
   };
 
   // Mettre à jour directement la quantité d'un produit
-  const updateCartQuantity = (itemId, size, quantity) => {
+  const updateCartQuantity = (docId, size, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(itemId, size);  // Supprimer l'article si la quantité est 0 ou inférieure
+      removeFromCart(docId, size);  // Supprimer l'article si la quantité est 0 ou inférieure
       return;
     }
 
     setCartItems((prevCartItems) => {
       const cartData = { ...prevCartItems };
-      if (!cartData[itemId]) {
-        cartData[itemId] = {};  // Assurer que l'article existe avant de mettre à jour la quantité
+      if (!cartData[docId]) {
+        cartData[docId] = {};  // Assurer que l'article existe avant de mettre à jour la quantité
       }
-      cartData[itemId][size] = quantity;
+      cartData[docId][size] = quantity;
       return cartData;
     });
 
@@ -95,12 +114,12 @@ export const ShopContextProvider = ({ children }) => {
   // Récupérer les détails des articles dans le panier (nom, prix, etc.)
   const getCartItemsDetails = () => {
     return Object.keys(cartItems)
-      .map((itemId) => {
-        const item = products.find((product) => product.id === parseInt(itemId));  
+      .map((docId) => {
+        const item = products.find((product) => product.id === docId);  
         if (item) {
           return {
             ...item,  
-            sizes: cartItems[itemId],  
+            sizes: cartItems[docId],  
           };
         }
         return null;  
@@ -110,10 +129,10 @@ export const ShopContextProvider = ({ children }) => {
 
   // Calculer le prix total du panier
   const calculateTotalPrice = () => {
-    const totalPrice = Object.keys(cartItems).reduce((total, itemId) => {
-      const item = products.find((product) => product.id === parseInt(itemId));
+    const totalPrice = Object.keys(cartItems).reduce((total, docId) => {
+      const item = products.find((product) => product.id === docId);
       if (item) {
-        const itemTotal = Object.entries(cartItems[itemId]).reduce(
+        const itemTotal = Object.entries(cartItems[docId]).reduce(
           (subtotal, [size, quantity]) => subtotal + item.price * quantity,
           0
         );

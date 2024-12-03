@@ -1,7 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { db, collection, getDocs } from '../firebase';  // Assure-toi que le chemin d'import est correct
-
+import { getDoc } from 'firebase/firestore';
+  // Assure-toi que le chemin d'import est correct
+import { collection } from 'firebase/firestore/lite';
 // Créer un Contexte pour les produits
+import { db } from '../firebase/firebase';
 const ProductContext = createContext();
 
 // Fournisseur du Contexte
@@ -11,7 +13,7 @@ export const ProductProvider = ({ children }) => {
   // Fonction pour récupérer les produits depuis Firestore
   const fetchProducts = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'produits'));
+      const querySnapshot = await getDoc(collection(db, 'products'));
       const productList = querySnapshot.docs.map(doc => doc.data());
       setProducts(productList);  // Mettre à jour l'état des produits
     } catch (error) {
@@ -19,12 +21,17 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  // Function to add a product to the product list
+  const addProduct = (product) => {
+    setProducts((prevProducts) => [...prevProducts, { id: Date.now(), ...product }]); // Adds the new product
+  };
+
   useEffect(() => {
-    fetchProducts();  // Charger les produits au démarrage
+    fetchProducts();  
   }, []);
 
   return (
-    <ProductContext.Provider value={{ products, setProducts }}>
+    <ProductContext.Provider value={{ products, setProducts,addProduct }}>
       {children}
     </ProductContext.Provider>
   );
