@@ -81,7 +81,7 @@ const Navbar = ({ handleOrderPopup, userRole }) => {
             <span className="cart-text">Mon compte</span>
             <FaUser className="cart-icon" />
           </button>
-          {userRole === 'user' &&
+          {userRole !== 'admin' &&
           <Link className="cart-btn" to='/cart'>
             <button onClick={isAuthenticated ? handleOrderPopup : handleAccountClick
 
