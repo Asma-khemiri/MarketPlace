@@ -1,25 +1,51 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
+import { getAuth } from 'firebase/auth';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebase';
+import { handleImageUpload } from '../utils/imageUpload';
+import toast from 'react-hot-toast';
 
 const Product = () => {
-  const { productId } = useParams();  // Get the productId from URL params
-  const { products, currency, addToCart } = useContext(ShopContext);  // Access global products and cart functionality
-  const [productData, setProductData] = useState(null);  // State to hold product details
-  const [image, setImage] = useState("");  // State for product image
-  const [selectedSize, setSelectedSize] = useState("");  // State to hold the selected size
+  const { productId } = useParams();
 
-  // Function to fetch the product data based on productId from the URL
+  const { products, currency, addToCart } = useContext(ShopContext);
+
+  const [productData, setProductData] = useState(null);
+
+  const [image, setImage] = useState("");
+
+  const [selectedSize, setSelectedSize] = useState("");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState("");
+
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+
+  const [sizes, setSizes] = useState([]);
+
+  // Fetch user authentication details:
+  const auth = getAuth();
+
+  const user = auth.currentUser;
+
+  const isAdmin = user?.email === "benbrahimsalma18@gmail.com";
+  
+
+  // fetch the product data based on productId 
   const fetchProductData = () => {
-    // Assuming productId is the Firestore document ID (a string), find the product by its Firestore ID
-    const product = products.find((item) => item.id === productId);  // Match Firestore document ID (string)
-    
+    const product = products.find((item) => item.id === productId);  // the productId = product document ID in Firestore
     if (product) {
-      console.log('Found product:', product);  // Log to check if the product is found
-      setProductData(product);  // Set the product data
-      setImage(product.img || "");  // Set the first image if available
+      setProductData(product);
+      setImage(product.img || "");
+      setTitle(product.title);
+      setDescription(product.description);
+      setPrice(product.price);
+      setSizes(product.sizes);
     } else {
-      console.log('Product not found');  // Add log to check if the product is not found
+      console.log('Produit non trouvé');
     }
   };
 
@@ -27,17 +53,62 @@ const Product = () => {
     if (products.length > 0) {
       fetchProductData();
     } else {
-      console.log('No products available');
+      console.log('Pas de produits disponibles');
     }
   }, [productId, products]);
 
+  // Handle product data update for admin
+  const handleUpdateProduct = async () => {
+    const productRef = doc(db, 'products', productId);
+    try {
+      await updateDoc(productRef, {
+        title,
+        description,
+        price,
+        sizes,
+        img: image
+      });
+      toast.success('Produit mis à jour avec succès !');
+      setIsEditing(false);
+    } catch (error) {
+      toast.error('There was an error updating the product.');
+    }
+  };
+
+  // Handle the product's size selection for customers
+  const handleAddToCart = () => {
+    if (selectedSize) {
+      addToCart(productData.id, selectedSize);  // Adding the Firestore document ID directly to the cart 
+    } else {
+      toast.error("Veuillez sélectionner une taille avant d'ajouter au panier.");
+    }
+  };
+
+  //deleting a product 
+  const handleDeleteProduct = async () => {
+    const productRef = doc(db, 'products', productId);
+    try {
+      await deleteDoc(productRef);  // Delete the product document from Firestore
+      toast.success('Produit supprimé avec succès!');
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Une erreur s'est produite lors de la suppression du produit ");
+    }
+  };
+   const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const imageUrl = await handleImageUpload(file);  // Upload image and get the URL
+        setImage(imageUrl);  // Update the image state with the URL
+      } catch (error) {
+        toast.error("Erreur de téléchargement de l'image. Veuillez réessayer.");
+      }
+    }
+  };
+
   if (!productData) {
     return <div>Loading...</div>;
-  }
-
-  // Check if sizes and image are available
-  if (!productData.sizes || productData.sizes.length === 0 || !productData.img) {
-    return <div>Product details are missing or incomplete.</div>;
   }
 
   return (
@@ -47,51 +118,134 @@ const Product = () => {
           <div className="p-5 w-full sm:w-[80%]">
             <img
               className="w-full mb-2 h-auto"
-              src={image || "/path/to/placeholder.jpg"}
+              src={image || ""}
               alt={productData.title}
             />
           </div>
         </div>
 
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold mb-2">{productData.title}</h1>
-          <p className="text-xl font-bold mb-4">
-            {productData.price} {currency}
-          </p>
-          <p className="text-gray-500 md:w-4/5">{productData.description}</p>
+          {isEditing ? (
+            <>
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="image-upload"
+                  className="hidden"
+                  onChange={handleImageChange}
+               
+                />
+                <label htmlFor="image-upload" className="flex items-center justify-center w-full h-12 bg-gray-200 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-300 transition duration-300">
+                  <span className="text-gray-700 font-medium">Changer la photo du produit</span>
+                </label>
+              </div>
+              <h1 className="text-2xl font-semibold mb-2">
+                <label className="block text-lg font-medium text-orange-700">Nom du Produit:</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="border p-2 w-full"
+                />
+              </h1>
+              <label  className="text-orange-700 font-medium" >Description:</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="border p-2 w-full mb-4"
+                placeholder="Product description"
+              />
+              <label  className="text-orange-700 font-medium">Prix:</label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="border p-2 w-full mb-4"
+                placeholder="Price"
+              />
+              <div className="flex flex-col gap-4 my-8">
+                <p  className="text-orange-700 font-medium">Taille:</p>
+                <div className="flex gap-2">
+                  {sizes && sizes.map((item, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      value={item}
+                      onChange={(e) => {
+                        const newSizes = [...sizes];
+                        newSizes[index] = e.target.value;
+                        setSizes(newSizes);
+                      }}
+                      className="border py-2 px-4"
+                    />
+                  ))}
+                </div>
+              </div>
 
-          <div className="flex flex-col gap-4 my-8">
-            <p>Size:</p>
-            <div className="flex gap-2">
-              {productData.sizes.map((item, index) => (
+              <button
+                onClick={handleUpdateProduct}
+                className="bg-green-500 text-white px-8 py-3 text-sm"
+              >
+              Enregistrer les modifications
+              </button>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-semibold mb-2">{productData.title}</h1>
+              <p className="text-xl font-bold mb-4">
+                {productData.price} {currency}
+              </p>
+              <p className="text-gray-500 md:w-4/5">{productData.description}</p>
+
+
+              { productData.userId === user.uid && (
+                <div>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-black text-white px-4 py-2 mt-4"
+                  >
+                   Modifier votre produit
+                  </button>
+                  <button
+                    onClick={handleDeleteProduct}
+                    className="bg-red-500 text-white px-4 py-2 mt-4 ml-2"
+                  >
+                  Supprimer votre produit
+                  </button>
+                </div>
+
+              )}
+
+              {!isAdmin && (
+                <div className="flex flex-col gap-4 my-8">
+                  <p>Taille(s):</p>
+                  <div className="flex gap-2">
+                    {productData.sizes.map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedSize(item)}  // Set selected size when clicked
+                        className={`border py-2 px-4 bg-orange-100 ${item === selectedSize ? 'border-black' : ''}`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!isAdmin && (
                 <button
-                  key={index}
-                  onClick={() => setSelectedSize(item)}  // Set selected size when clicked
-                  className={`border py-2 px-4 bg-orange-100 ${item === selectedSize ? 'border-black' : ''}`}
+                  onClick={handleAddToCart}
+                  className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700"
                 >
-                  {item}
+                  Ajouter au Panier
                 </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              if (selectedSize) {
-                addToCart(productData.id, selectedSize);  // Add the Firestore document ID directly to the cart
-              } else {
-                alert("Please select a size before adding to cart.");
-              }
-            }}
-            className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700"
-          >
-            Ajouter au Panier
-          </button>
+              )}
+            </>
+          )}
 
           <hr className="mt-8 sm:w-4/5" />
-          <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
-            {/* Additional product details */}
-          </div>
         </div>
       </div>
     </div>

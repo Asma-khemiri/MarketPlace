@@ -18,7 +18,9 @@ import Checkout from './pages/Checkout';
 import ConfirmationPage from './pages/ConfirmationPage';
 import AddProductForm from './pages/AddProductForm';
 import MesProduits from './pages/MesProduits';
-import uploadProducts from './firebase/productService';
+import uploadProducts from './firebase/services/productService';
+import EditProduct from './pages/EditProduct';
+import Dashboard from './pages/admin/Dashboard';
 const App = () => {
   useEffect(() => {
     uploadProducts(); 
@@ -64,15 +66,20 @@ const App = () => {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<><Home handleOrderPopup={handleOrderPopup} /><Populaire /></>} />
+        {userRole ==='user' ? 
+        <Route path="/" element={<><Home handleOrderPopup={handleOrderPopup} /><Populaire /></>} />: 
         
-        {/* Collection page only accessible by users */}
+      
         <Route 
+          path="/admin-dashboard" 
+          element={ <Dashboard />} 
+        />}
+         <Route 
           path="/collection" 
-          element={ <Collection />} 
-        />
+          element={ <Collection />} />
 
         <Route path="/product/:productId" element={<Product />} />
+        <Route path="/edit-product/:productId" element={<EditProduct />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
@@ -80,7 +87,6 @@ const App = () => {
         
 
 
-        {/* Admin access to AddProductPage */}
         <Route 
           path="/ajouter-produit" 
           element={<AddProductForm />} 

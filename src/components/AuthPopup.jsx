@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { auth, db } from '../firebase/firebase'; 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom'; 
 import { toast } from 'react-hot-toast'; 
 import { Toaster } from 'react-hot-toast'; 
-import { setDoc, collection, getDoc,doc } from "firebase/firestore";
+import { setDoc,getDoc,doc } from "firebase/firestore";
+import { ShopContext } from "../context/ShopContext";
+
 
 const AuthPopup = ({ authPopup, setAuthPopup }) => {
   const [isSignup, setIsSignup] = useState(false); 
@@ -15,6 +17,8 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
   const [currentUser, setCurrentUser] = useState(null); 
   const [role, setRole] = useState('user'); 
   const navigate = useNavigate(); 
+  const {clearCart} =useContext(ShopContext);
+
 
   // Observer l'état de l'authentification de l'utilisateur
   useEffect(() => {
@@ -98,7 +102,9 @@ const AuthPopup = ({ authPopup, setAuthPopup }) => {
       await signOut(auth);
       toast.success("Déconnexion réussie!");
       setCurrentUser(null); 
-      setRole("user"); 
+      clearCart();
+      navigate('/');
+      
     } catch (error) {
       toast.error("Erreur lors de la déconnexion : " + error.message);
     }

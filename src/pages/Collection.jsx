@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext';
 
 import ProductItem from '../components/ProductItem';
+import { deleteProduct } from '../firebase/services/productService';
 
 
 
@@ -44,7 +45,17 @@ const Collection = () => {
   }, [products])
   useEffect(() => {
     applyFilter();
-  }, [category,type,search])
+  }, [category,type,search]);
+  const handleDelete = async (id) => {
+    try {
+      // Call your service to delete the product from Firestore
+      await deleteProduct(id);
+      // After deletion, remove the product from the local state
+      setFilterProducts((prev) => prev.filter((product) => product.id !== id));
+    } catch (error) {
+      console.error("Error deleting product: ", error);
+    }
+  };
  
   
   return (
@@ -104,7 +115,7 @@ const Collection = () => {
       <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
         {filterProducts.map((item, index) => (
           <ProductItem key={index} id={item.id}
-            img={item.img} title={item.title} price={item.price}
+            img={item.img} title={item.title} price={item.price} handleDelete={handleDelete} userRole ='admin'
           />
         ))}
       </div>
