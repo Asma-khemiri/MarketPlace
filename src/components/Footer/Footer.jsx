@@ -17,7 +17,8 @@ const FooterLinks = [
 ];
 const Footer = () => {
     return (
-        <div className="footer-container">
+        
+        <footer className="footer-container">
             <div className="container">
                 <div>
                     {/* Company details */}
@@ -81,7 +82,7 @@ const Footer = () => {
                     Copyright © 2024. Tous droits réservés par AS Shop-GROUP
                 </p>
             </div>
-        </div>
+        </footer>
     );
 };
 
