@@ -66,7 +66,7 @@ const App = () => {
 
       {/* Routes */}
       <Routes>
-        {userRole ==='user' ? 
+        {userRole !=='admin' ? 
         <Route path="/" element={<><Home handleOrderPopup={handleOrderPopup} /><Populaire /></>} />: 
         
       

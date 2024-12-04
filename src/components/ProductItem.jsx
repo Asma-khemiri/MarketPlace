@@ -13,7 +13,7 @@ const ProductItem = ({ id, img, title, price }) => {
   const [isAdmin, setIsAdmin] = useState(false); // Track if the user is an admin
   const auth = getAuth(); // Firebase Auth instance
   const user = auth.currentUser; // Current authenticated user
-  const navigate = useNavigate();
+
 
   // Function to check if the current user is an admin
   const checkAdminStatus = async () => {
