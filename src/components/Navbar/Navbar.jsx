@@ -17,7 +17,7 @@ const Navbar = ({ handleOrderPopup, userRole }) => {
   const navigate = useNavigate();
 
   //  gérer le clic sur Mon compte
-  const handleAccountClick = () => {
+ const handleAccountClick = () => {
     if (!isAuthenticated) {
       setAuthPopup(true);
     } else {
@@ -81,7 +81,7 @@ const Navbar = ({ handleOrderPopup, userRole }) => {
             <span className="cart-text">Mon compte</span>
             <FaUser className="cart-icon" />
           </button>
-
+          {userRole === 'user' &&
           <Link className="cart-btn" to='/cart'>
             <button onClick={isAuthenticated ? handleOrderPopup : handleAccountClick
 
@@ -91,7 +91,7 @@ const Navbar = ({ handleOrderPopup, userRole }) => {
               <FaCartShopping className="cart-icon" />
               <p className="cart-badge">{getCartCount()}</p>
             </button>
-          </Link>
+          </Link>}
         </div>
       </div>
 

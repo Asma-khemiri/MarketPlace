@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import { handleImageUpload } from "../utils/imageUpload";
-import { addProduct } from "../firebase/productService";
+import { addProduct } from "../firebase/services/productService";
 
-const AddProductForm = () => {
+const AddProductForm = ({setProducts}) => {
   const [nom, setNom] = useState("");
   const [description, setDescription] = useState("");
   const [prix, setPrix] = useState("");
@@ -74,6 +74,11 @@ const AddProductForm = () => {
     try {
       await addProduct(newProduct);
       toast.success("Produit ajouté avec succès !");
+      // After adding product, update the products list in MesProduits page
+      setProducts((prevProducts) => [...prevProducts, newProduct]);
+      
+    
+
       // Reset form
       setNom("");
       setDescription("");

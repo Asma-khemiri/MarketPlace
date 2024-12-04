@@ -1,21 +1,24 @@
-import React, { createContext, useState } from 'react';
-import { products } from '../assets/assets'; 
+import React, { createContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { fetchProducts } from '../firebase/productService';
-import { useEffect } from 'react';
-
+import { fetchProducts } from '../firebase/services/productService';
 
 export const ShopContext = createContext();
 
-
 export const ShopContextProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
+  const [cartItems, setCartItems] = useState({}); // State for cart items
+  const [user, setUser] = useState(null); // User state
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Authentication status
+  const [search, setSearch] = useState(''); // Search query state
+  const currency = 'TND'; // Currency
+  const delivery_fee = 10; // Delivery fee
 
+  // Fetch products from Firestore when the component mounts
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const fetchedProducts = await fetchProducts(); // Fetch products from Firestore
-        setProducts(fetchedProducts); // Update state with fetched products
+        const fetchedProducts = await fetchProducts(); 
+        setProducts(fetchedProducts); 
       } catch (error) {
         console.error("Error fetching products: ", error);
       }
@@ -24,15 +27,22 @@ export const ShopContextProvider = ({ children }) => {
     loadProducts();
   }, []);
 
-  const currency = 'TND';  
-  const delivery_fee = 10;  // Frais de livraison
-  const [search, setSearch] = useState('');  // Requête de recherche pour filtrer les produits
-  const [cartItems, setCartItems] = useState({});  // État du panier 
+  // Load cart items from localStorage on component mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cartItems');
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
+    }
+  }, []);
 
-  const [user, setUser] = useState(null); // État de l'utilisateur connecté
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Save cart items to localStorage whenever they change
+  useEffect(() => {
+    if (Object.keys(cartItems).length > 0) {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
 
-  // Ajouter un produit au panier
+  // Add a product to the cart
   const addToCart = (docId, size) => {
     if (!size) {
       toast.error('Sélectionnez la taille du produit');
@@ -43,13 +53,11 @@ export const ShopContextProvider = ({ children }) => {
       const cartData = { ...prevCartItems };
 
       if (cartData[docId]) {
-        // Si l'article est déjà dans le panier, mettre à jour la quantité de la taille sélectionnée
         cartData[docId] = {
           ...cartData[docId],
           [size]: (cartData[docId][size] || 0) + 1,
         };
       } else {
-        // Si l'article n'est pas dans le panier, l'ajouter avec la taille et la quantité
         cartData[docId] = { [size]: 1 };
       }
 
@@ -58,7 +66,7 @@ export const ShopContextProvider = ({ children }) => {
     });
   };
 
-  // Retirer un produit du panier
+  // Remove a product from the cart
   const removeFromCart = (docId, size) => {
     setCartItems((prevCartItems) => {
       const cartData = { ...prevCartItems };
@@ -66,13 +74,11 @@ export const ShopContextProvider = ({ children }) => {
         const newQuantity = cartData[docId][size] - 1;
 
         if (newQuantity > 0) {
-          // Réduire la quantité si elle est supérieure à 0
           cartData[docId] = { ...cartData[docId], [size]: newQuantity };
         } else {
-          // Supprimer l'article si la quantité est 0
           delete cartData[docId][size];
           if (Object.keys(cartData[docId]).length === 0) {
-            delete cartData[docId];  // Si aucune taille n'est encore présente, supprimer l'article
+            delete cartData[docId];
           }
         }
 
@@ -82,17 +88,17 @@ export const ShopContextProvider = ({ children }) => {
     });
   };
 
-  // Mettre à jour directement la quantité d'un produit
+  // Update the quantity of a product in the cart
   const updateCartQuantity = (docId, size, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(docId, size);  // Supprimer l'article si la quantité est 0 ou inférieure
+      removeFromCart(docId, size); 
       return;
     }
 
     setCartItems((prevCartItems) => {
       const cartData = { ...prevCartItems };
       if (!cartData[docId]) {
-        cartData[docId] = {};  // Assurer que l'article existe avant de mettre à jour la quantité
+        cartData[docId] = {};
       }
       cartData[docId][size] = quantity;
       return cartData;
@@ -101,7 +107,7 @@ export const ShopContextProvider = ({ children }) => {
     toast.success('Quantité mise à jour !');
   };
 
-  // Compter le nombre total d'articles dans le panier
+  // Get the total count of items in the cart
   const getCartCount = () => {
     return Object.values(cartItems).reduce(
       (count, sizes) =>
@@ -111,23 +117,23 @@ export const ShopContextProvider = ({ children }) => {
     );
   };
 
-  // Récupérer les détails des articles dans le panier (nom, prix, etc.)
+  // Get detailed information for the items in the cart
   const getCartItemsDetails = () => {
     return Object.keys(cartItems)
       .map((docId) => {
-        const item = products.find((product) => product.id === docId);  
+        const item = products.find((product) => product.id === docId);
         if (item) {
           return {
-            ...item,  
-            sizes: cartItems[docId],  
+            ...item,
+            sizes: cartItems[docId],
           };
         }
-        return null;  
+        return null;
       })
-      .filter((item) => item !== null); 
+      .filter((item) => item !== null);
   };
 
-  // Calculer le prix total du panier
+  // Calculate the total price of items in the cart
   const calculateTotalPrice = () => {
     const totalPrice = Object.keys(cartItems).reduce((total, docId) => {
       const item = products.find((product) => product.id === docId);
@@ -141,43 +147,50 @@ export const ShopContextProvider = ({ children }) => {
       return total;
     }, 0);
 
-    // Ajouter les frais de livraison
     return totalPrice + delivery_fee;
   };
+   const clearCart = () => {
+    
+    setCartItems({});
+    localStorage.removeItem("cartItems");
+  };
 
-  // Fonction de connexion
+  // User login function
   const loginUser = (username) => {
     setUser(username); 
     setIsAuthenticated(true);
     toast.success('Bienvenue, ' + username);
   };
 
-  // Fonction de déconnexion
+  // User logout function
   const logoutUser = () => {
     setUser(null); 
     setIsAuthenticated(false);
+     setCartItems({}); 
+     clearCart();
     toast.success('Déconnexion réussie');
+   
   };
 
-  // Valeur du contexte (les méthodes et les états accessibles dans le contexte)
+  // The context value accessible to other components
   const value = {
-    products,  
-    currency,  // Monnaie
-    delivery_fee,  
-    search, 
-    setSearch,  
-    cartItems, 
-    addToCart,  
-    removeFromCart,  
-    updateCartQuantity,  
-    getCartCount,  
-    getCartItemsDetails,  
-    calculateTotalPrice,  
-    user,  
-    loginUser,  
+    products,
+    currency,
+    delivery_fee,
+    search,
+    setSearch,
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+    getCartCount,
+    getCartItemsDetails,
+    calculateTotalPrice,
+    loginUser,
     logoutUser,
     isAuthenticated,
-    setIsAuthenticated 
+    setIsAuthenticated,
+    clearCart
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

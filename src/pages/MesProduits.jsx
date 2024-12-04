@@ -1,74 +1,65 @@
-import React, { useState, useEffect } from "react";
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/firebase'; // Assurez-vous d'importer le db correctement
-import { toast } from 'react-hot-toast';
-import ProductItem from '../components/ProductItem'; // Assurez-vous que le composant ProductItem est importé
+import React, { useEffect, useState } from "react";
+import { fetchUserProducts, deleteProduct } from "../firebase/services/productService";
+import { getAuth } from "firebase/auth";
+import ProductItem from "../components/ProductItem";
+import { useNavigate } from "react-router-dom";  // For navigation after delete/edit
 
 const MesProduits = () => {
   const [products, setProducts] = useState([]);
-  const [filterProducts, setFilterProducts] = useState([]);
+  const [userId, setUserId] = useState(null); // State to store userId
+  const navigate = useNavigate(); // For navigation after product deletion
 
-  const fetchProducts = async () => {
+  // Fetch user's products from Firestore on user change
+  useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      setUserId(user.uid);
+      fetchUserProducts(user.uid)
+        .then(setProducts)
+        .catch(console.error);
+    }
+  }, []);
+
+  const handleDelete = async (id) => {
     try {
-      const querySnapshot = await getDocs(collection(db, "produits"));
-      const productsList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setProducts(productsList);
-      setFilterProducts(productsList); // Remplir la liste filtrée initiale avec tous les produits
-      toast.success("Les produits ont été récupérés avec succès.");
+      // Call your service to delete the product from Firestore
+      await deleteProduct(id);
+      // Remove the deleted product from the UI
+      setProducts(products.filter(product => product.id !== id));
+      alert("Product deleted successfully");
     } catch (error) {
-      console.error("Erreur lors de la récupération des produits:", error);
-      toast.error("Erreur lors de la récupération des produits.");
+      console.error("Error deleting product:", error);
+      alert("Error deleting product");
     }
   };
 
-  useEffect(() => {
-    fetchProducts(); // Récupère les produits lors du premier rendu du composant
-  }, []);
+  const handleEdit = (productId) => {
+    // Navigate to the edit page with productId as parameter
+    navigate(`/edit-product/${productId}`);
+  };
 
   return (
-    <div className='flex flex-col sm:flex-row gap-10 pt-10 border-t'>
-      <div className='min-w-60'>
-        <p className='my-2 text-xl flex items-center cursor-pointer gap-2'>FILTRES</p>
-        <div className='border border-gray-300 pl-5 py-3 mt-6'>
-          <p className='mb-3 text-sm font-medium'> CATEGORIES</p>
-          <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Femme'} />
-              Femme
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Homme'} />
-              Homme
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Enfant'} />
-              Enfant
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div className='flex-1'>
-        <div className='flex justify-between text-base sm:text-2xl mb-4'>
-          <div className=" inline-flex gap-2 items-center mb-3 font-medium">
-            TOUS LES PRODUITS
-          </div>
-        </div>
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">My Products</h2>
 
-        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
-          {filterProducts.map((product, index) => (
-            <ProductItem 
-              key={index} 
-              id={product.id} 
-              img={product.image || "default-image.jpg"} // Image par défaut si image non disponible
-              title={product.nom} 
-              price={product.prix} 
-            />
-          ))}
-        </div>
+      {/* Display User's Products */}
+      <div className="mt-8">
+        <ul>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
+            {products.map((item, index) => (
+              <ProductItem
+                key={index}
+                id={item.id}
+                img={item.img}
+                title={item.title}
+                price={item.price}
+                handleDelete={handleDelete}
+                handleEdit={handleEdit}
+              />
+            ))}
+          </div>
+        </ul>
       </div>
     </div>
   );
