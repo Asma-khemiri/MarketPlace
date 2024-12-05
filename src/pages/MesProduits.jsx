@@ -41,7 +41,7 @@ const MesProduits = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">My Products</h2>
+      <h2 className="text-xl font-bold mb-4">Mes Produits</h2>
 
       {/* Display User's Products */}
       <div className="mt-8">

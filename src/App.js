@@ -1,104 +1,117 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom'; 
-import { auth, db } from './firebase/firebase'; 
-import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { auth, db } from "./firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 // Components
-import Navbar from './components/Navbar/Navbar'; 
-import Footer from './components/Footer/Footer'; 
-import AuthPopup from './components/AuthPopup';
-import Home from './components/Header/Header';
-import Populaire from './components/Populaire/Populaire';  
+import Navbar from "./components/Navbar/Navbar";
+import Footer from "./components/Footer/Footer";
+import AuthPopup from "./components/AuthPopup";
+import Header from "./components/Header/Header";
+import Populaire from "./components/Populaire/Populaire";
 
-import Collection from './pages/Collection';
-import Product from './pages/Product';
+// Pages
+import Collection from "./pages/Collection";
+import Product from "./pages/Product";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import AddProductForm from "./pages/AddProductForm";
+import MesProduits from "./pages/MesProduits";
+import EditProduct from "./pages/EditProduct";
+import Dashboard from "./pages/Dashboard";
 
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import ConfirmationPage from './pages/ConfirmationPage';
-import AddProductForm from './pages/AddProductForm';
-import MesProduits from './pages/MesProduits';
-import uploadProducts from './firebase/services/productService';
-import EditProduct from './pages/EditProduct';
-import Dashboard from './pages/admin/Dashboard';
 const App = () => {
-  useEffect(() => {
-    uploadProducts(); 
-  }, []); 
-  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authPopup, setAuthPopup] = useState(false); 
-  const [orderPopup, setOrderPopup] = useState(false); 
- 
+  const [authPopup, setAuthPopup] = useState(false);
+  const [orderPopup, setOrderPopup] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [products, setProducts] = useState([]);
 
-  const handleOrderPopup = () => {
-    setOrderPopup(!orderPopup); 
-  };
-  
- 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        setIsAuthenticated(true); 
-        const userRef = doc(db, 'users', user.uid);
+        setIsAuthenticated(true);
+        const userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserRole(data.role); 
+          setUserRole(userDoc.data().role);
         } else {
-          console.error("No such document!");
-          setUserRole(null); // Set to null if no document exists
+          console.error("User document does not exist");
+          setUserRole(null);
         }
       } else {
-        setIsAuthenticated(false); 
-        setUserRole(null); 
+        setIsAuthenticated(false);
+        setUserRole(null);
       }
     });
     return () => unsubscribe();
   }, []);
 
+  const handleOrderPopup = () => {
+    setOrderPopup(!orderPopup);
+  };
+
   return (
     <>
-      <Navbar isAuthenticated={isAuthenticated} userRole={userRole} handleOrderPopup={handleOrderPopup} />
-      
+      <Navbar
+        isAuthenticated={isAuthenticated}
+        userRole={userRole}
+        handleOrderPopup={handleOrderPopup}
+      />
+
       {authPopup && !isAuthenticated && <AuthPopup setAuthPopup={setAuthPopup} />}
 
-      {/* Routes */}
       <Routes>
-        {userRole !=='admin' ? 
-        <Route path="/" element={<><Home handleOrderPopup={handleOrderPopup} /><Populaire /></>} />: 
-        
-      
-        <Route 
-          path="/admin-dashboard" 
-          element={ <Dashboard />} 
-        />}
-         <Route 
-          path="/collection" 
-          element={ <Collection />} />
-
+        {/* Public Routes */}
+        <Route
+          path="/"
+          element={
+            <>
+              <Header handleOrderPopup={handleOrderPopup} />
+              <Populaire />
+            </>
+          }
+        />
+        <Route path="/collection" element={<Collection />} />
         <Route path="/product/:productId" element={<Product />} />
-        <Route path="/edit-product/:productId" element={<EditProduct />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/confirmation" element={<ConfirmationPage />} />
-        {/*<Route path="/contact" element={<Contact />} />*/}
-        
 
+        {/* Admin Routes */}
+        <Route
+          path="/admin-dashboard"
+          element={
+            userRole === "admin" ? <Dashboard /> : <Navigate to="/" />
+          }
+        />
+        <Route
+          path="/edit-product/:productId"
+          element={
+            userRole === "admin" ? <EditProduct /> : <Navigate to="/" />
+          }
+        />
 
-        <Route 
-          path="/ajouter-produit" 
-          element={<AddProductForm />} 
+        {/* User Routes */}
+        <Route
+          path="/mes-produits"
+          element={
+            isAuthenticated && userRole === "user" ? (
+              <MesProduits />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
-        
-        {/* MesProduits page only accessible by users */}
-        <Route 
-          path="/mes-produits" 
-          element={isAuthenticated && userRole === "user" ? <MesProduits /> : <Navigate to="/" />} 
+        <Route
+          path="/ajouter-produit"
+          element={
+            isAuthenticated && userRole === "user" ? (
+              <AddProductForm setProducts={setProducts} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
-        
-        
       </Routes>
 
       <Footer />
