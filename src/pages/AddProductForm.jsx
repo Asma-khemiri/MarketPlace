@@ -3,242 +3,194 @@ import { toast, Toaster } from "react-hot-toast";
 import { handleImageUpload } from "../utils/imageUpload";
 import { addProduct } from "../firebase/services/productService";
 
-const AddProductForm = ({setProducts}) => {
-  const [nom, setNom] = useState("");
-  const [description, setDescription] = useState("");
-  const [prix, setPrix] = useState("");
-  const [image, setImage] = useState(null);
-  const [categorie, setCategorie] = useState("");
-
-  const [type, setType] = useState("");
-  const [taille, setTaille] = useState({
-    S: false,
-    M: false,
-    L: false,
-
+const AddProductForm = ({ setProducts }) => {
+  const initialTailleState = { S: false, M: false, L: false, "36": false, "37": false, "38": false, "20": false, "21": false, "22": false };
+  
+  const [formData, setFormData] = useState({
+    nom: "",
+    description: "",
+    prix: "",
+    image: null,
+    categorie: "",
+    type: "",
+    taille: initialTailleState,
   });
-  const handleSizeChange = (e) => {
-    const { name, checked } = e.target;
-    setTaille((prevSizes) => ({
-      ...prevSizes,
-      [name]: checked,
+
+  // Handle input changes dynamically
+  const handleChange = (e) => {
+    const { name, value, type, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "file" ? files[0] : value,
     }));
   };
 
+  // Handle checkbox changes for sizes
+  const handleSizeChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      taille: { ...prev.taille, [name]: checked },
+    }));
+  };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation des champs
-    if (!nom || !description || !prix || !categorie || !taille) {
+    const { nom, description, prix, image, categorie, type, taille } = formData;
+
+    // Form validation
+    if (!nom || !description || !prix || !categorie || !type) {
       toast.error("Tous les champs sont obligatoires !");
       return;
     }
 
-    // Validation du prix
     if (isNaN(prix) || prix <= 0) {
       toast.error("Le prix doit être un nombre positif !");
       return;
     }
 
-    // Vérification de l'image
-    if (image && !image.type.startsWith('image/')) {
+    if (image && !image.type.startsWith("image/")) {
       toast.error("Veuillez télécharger une image valide !");
       return;
     }
 
-    // Upload image to Cloudinary and get the image URL
+    // Upload image to Cloudinary
     let imageUrl = "";
     if (image) {
       try {
-        imageUrl = await handleImageUpload(image); 
+        imageUrl = await handleImageUpload(image);
       } catch (error) {
-        toast.error(error.message);
+        toast.error("Erreur lors de l'upload de l'image.");
         return;
       }
     }
-    // Collect sizes as an array
-  const selectedSizes = Object.keys(taille).filter((size) => taille[size]);
 
+    // Extract selected sizes
+    const selectedSizes = Object.keys(taille).filter((size) => taille[size]);
+
+    // Prepare product data
     const newProduct = {
       title: nom.trim(),
       description: description.trim(),
       price: parseFloat(prix),
-      img: imageUrl || "No image", //  image URL from Cloudinary
+      img: imageUrl || "No image",
       category: categorie,
       type,
-      sizes:selectedSizes,
+      sizes: selectedSizes,
     };
 
-    // Ajout du produit à Firestore
+    // Add product to Firebase
     try {
       await addProduct(newProduct);
       toast.success("Produit ajouté avec succès !");
-      // After adding product, update the products list in MesProduits page
-      setProducts((prevProducts) => [...prevProducts, newProduct]);
-      
-    
+      setProducts((prev) => [...prev, newProduct]);
 
       // Reset form
-      setNom("");
-      setDescription("");
-      setPrix("");
-      setImage(null);
-      setCategorie("");
-      setType("");
-      setTaille({ S: false, M: false, L: false})
+      setFormData({
+        nom: "",
+        description: "",
+        prix: "",
+        image: null,
+        categorie: "",
+        type: "",
+        taille: initialTailleState,
+      });
     } catch (error) {
-      console.error("Erreur lors de l'ajout du produit :", error);
       toast.error("Une erreur est survenue. Veuillez réessayer.");
     }
   };
 
-
-
   return (
-    <>
+    <div className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
+      <form onSubmit={handleSubmit}>
+        <h1 className="text-4xl font-semibold text-orange-600 text-center mb-6">Ajouter un Nouveau Produit</h1>
 
-
-      <div className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
-
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <h1 className="text-4xl font-semibold text-orange-600 text-center mb-6">Ajouter un Nouveau Produit</h1>
-            <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
-              Nom du produit
+        {/* Input fields */}
+        {["nom", "description", "prix"].map((field) => (
+          <div className="mb-4" key={field}>
+            <label className="block text-sm font-medium text-gray-700" htmlFor={field}>
+              {field === "nom" ? "Nom du produit" : field.charAt(0).toUpperCase() + field.slice(1)}
             </label>
             <input
-              type="text"
-              id="nom"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              required
+              type={field === "prix" ? "number" : "text"}
+              id={field}
+              name={field}
+              value={formData[field]}
+              onChange={handleChange}
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
+        ))}
 
-          <div className="mb-4">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description
+        {/* Image upload */}
+        <div className="mb-4">
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            onChange={handleChange}
+           className="hidden"
+          />
+          <label
+              htmlFor="image"
+              className="w-full block bg-gray-200 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-300 transition duration-300 py-3 text-center font-medium text-gray-700"
+            >
+            Image du produit
             </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
+        </div>
 
-          <div className="mb-4">
-            <label htmlFor="prix" className="block text-sm font-medium text-gray-700">
-              Prix
-            </label>
-            <input
-              type="number"
-              id="prix"
-              value={prix}
-              onChange={(e) => setPrix(e.target.value)}
-              required
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-              Image du produit
-            </label>
-            <input
-              type="file"
-              id="image"
-              onChange={(e) => setImage(e.target.files[0])}
-              accept="image/*"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="categorie" className="block text-sm font-medium text-gray-700">
-              Catégorie
+        {/* Category */}
+        {["categorie", "type"].map((field) => (
+          <div className="mb-4" key={field}>
+            <label className="block text-sm font-medium text-gray-700" htmlFor={field}>
+              {field === "categorie" ? "Catégorie" : "Sous Catégorie"}
             </label>
             <select
-              id="categorie"
-              value={categorie}
-              onChange={(e) => setCategorie(e.target.value)}
-              required
+              id={field}
+              name={field}
+              value={formData[field]}
+              onChange={handleChange}
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              <option value="">Choisir une catégorie</option>
-              <option value="homme">Homme</option>
-              <option value="femme">Femme</option>
-              <option value="enfant">Enfant</option>
+              <option value="">{field === "categorie" ? "Choisir une catégorie" : "Choisir une Sous Catégorie"}</option>
+              {field === "categorie" ? (
+                ["Homme", "Femme", "Enfant"].map((cat) => <option key={cat} value={cat}>{cat}</option>)
+              ) : (
+                ["vetements", "outwear", "chaussures"].map((sub) => <option key={sub} value={sub}>{sub}</option>)
+              )}
             </select>
           </div>
-          <div className="mb-4">
-            <label htmlFor="categorie" className="block text-sm font-medium text-gray-700">
-              Sous Catégorie
-            </label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              required
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Choisir une Sous Catégorie</option>
-              <option value="vetements">Vetements</option>
-              <option value="outwear">OUTWEAR</option>
-              <option value="chaussures">Chaussures</option>
-            </select>
-          </div>
+        ))}
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Taille(s)</label>
-            <div className="flex space-x-4 mt-2">
-              <label className="flex items-center">
+        {/* Sizes */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">Taille(s)</label>
+          <div className="flex flex-wrap gap-4 mt-2">
+            {Object.keys(formData.taille).map((size) => (
+              <label className="flex items-center" key={size}>
                 <input
                   type="checkbox"
-                  name="S"
-                  checked={taille.S}
+                  name={size}
+                  checked={formData.taille[size]}
                   onChange={handleSizeChange}
                   className="mr-2"
                 />
-                S
+                {size}
               </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="M"
-                  checked={taille.M}
-                  onChange={handleSizeChange}
-                  className="mr-2"
-                />
-                M
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="L"
-                  checked={taille.L}
-                  onChange={handleSizeChange}
-                  className="mr-2"
-                />
-                L
-              </label>
-             
-            </div>
+            ))}
           </div>
+        </div>
 
-          <button
-            type="submit"
-            className="w-full py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
-          >
-            Ajouter le produit
-          </button>
-        </form>
-        <Toaster />
-      </div>
-    </>
+        {/* Submit button */}
+        <button type="submit" className="w-full py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700">
+          Ajouter le produit
+        </button>
+      </form>
+      <Toaster />
+    </div>
   );
 };
 

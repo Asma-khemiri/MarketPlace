@@ -1,17 +1,15 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { addCommand } from '../firebase/services/commandService';
-import { getAuth } from "firebase/auth";
-import emailjs from 'emailjs-com';  
+import { getAuth } from 'firebase/auth';
+import emailjs from 'emailjs-com';
 import toast from 'react-hot-toast';
-
 
 const Checkout = () => {
   const {
     getCartItemsDetails,
     calculateTotalPrice,
     currency,
-   
   } = useContext(ShopContext);
 
   const [formData, setFormData] = useState({
@@ -20,21 +18,24 @@ const Checkout = () => {
     address: '',
     city: '',
     postalCode: '',
+    cardNumber: '',
+    cardExpiry: '',
+    cvv: '',
+    paypalEmail: '',
   });
 
   const [paymentMethod, setPaymentMethod] = useState('Carte de Crédit');
- const [userId, setUserId] = useState(null); // State to store userId
+  const [userId, setUserId] = useState(null);
 
   const items = getCartItemsDetails();
 
-  // Fetch the user ID when the component mounts
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
-      setUserId(user.uid); // Set the user ID if user is authenticated
+      setUserId(user.uid);
     } else {
-        // Show the authentication popup if not logged in
+      toast.error("Vous devez être connecté pour passer une commande.");
     }
   }, []);
 
@@ -55,11 +56,9 @@ const Checkout = () => {
 
     if (!userId) {
       toast.error("Vous devez être connecté pour passer une commande.");
-        // Show the authentication popup
       return;
     }
 
-    // Get total price
     const totalPrice = calculateTotalPrice();
     const selectedItems = items.map(item => ({
       id: item.id,
@@ -69,9 +68,8 @@ const Checkout = () => {
     }));
 
     try {
-     await addCommand(userId, selectedItems, totalPrice);
+      await addCommand(userId, selectedItems, totalPrice);
       toast.success('Commande passée avec succès !');
-      // Send email
       sendEmail(formData, items, totalPrice);
     } catch (error) {
       toast.error("Une erreur s'est produite lors de la commande.");
@@ -85,7 +83,7 @@ const Checkout = () => {
         .join(', ');
 
       return `${item.title} - ${sizeDetails}`;
-    }).join('\n'); 
+    }).join('\n');
 
     const emailData = {
       name: formData.name,
@@ -101,15 +99,19 @@ const Checkout = () => {
 
     try {
       await emailjs.send(
-        'service_xapcvwf',  // Your EmailJS service ID
-        'template_qpkwe44', // Your EmailJS template ID
+        'service_8n3fd99',
+        'template_2tm0j1e',
         emailData,
-        'lFwF6dBUMQ82nso0U' // Your EmailJS user ID
+        'QHNLRut0hrp0tJLAZ'
       );
       toast.success('E-mail envoyé avec succès !');
     } catch (error) {
       toast.error("Une erreur s'est produite lors de l'envoi de votre e-mail.");
     }
+  };
+
+  const handleGoHome = () => {
+    window.location.href = '/';
   };
 
   return (
@@ -210,12 +212,23 @@ const Checkout = () => {
               <input
                 type="radio"
                 name="paymentMethod"
-                value="Carte de Crédit"
-                checked={paymentMethod === 'Carte de Crédit'}
+                value="Master Card"
+                checked={paymentMethod === 'Master Card'}
                 onChange={handlePaymentMethodChange}
                 className="form-radio"
               />
-              <span className="ml-2">Carte bancaire</span>
+              <span className="ml-2">Master Card</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="Visa Card"
+                checked={paymentMethod === 'Visa Card'}
+                onChange={handlePaymentMethodChange}
+                className="form-radio"
+              />
+              <span className="ml-2">Visa Card</span>
             </label>
             <label className="inline-flex items-center">
               <input
@@ -228,30 +241,73 @@ const Checkout = () => {
               />
               <span className="ml-2">PayPal</span>
             </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="Paiement à la Livraison"
-                checked={paymentMethod === 'Paiement à la Livraison'}
-                onChange={handlePaymentMethodChange}
-                className="form-radio"
-              />
-              <span className="ml-2">Paiement à la livraison</span>
-            </label>
           </div>
         </div>
 
-        {/* Bouton de confirmation */}
-        <button
-          onClick={handleConfirmOrder}
-          className="mt-6 w-full py-3 bg-orange-400 text-white rounded-lg shadow-md hover:bg-orange-500 focus:outline-none"
-        >
-          Confirmer la commande
-        </button>
-      </div>
+        {/* Champs pour Carte Bancaire (MasterCard ou Visa) */}
+        {(paymentMethod === 'Master Card' || paymentMethod === 'Visa Card') && (
+          <div className="mt-6">
+            <input
+              type="text"
+              name="cardNumber"
+              placeholder="Numéro de carte"
+              value={formData.cardNumber}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-300 rounded-md"
+            />
+            <input
+              type="text"
+              name="cardExpiry"
+              placeholder="Date d'expiration"
+              value={formData.cardExpiry}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-300 rounded-md mt-2"
+            />
+            <input
+              type="text"
+              name="cvv"
+              placeholder="CVV"
+              value={formData.cvv}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-300 rounded-md mt-2"
+            />
+          </div>
+        )}
 
-     
+        {/* Champs pour PayPal */}
+        {paymentMethod === 'PayPal' && (
+          <div className="mt-6">
+            <input
+              type="email"
+              name="paypalEmail"
+              placeholder="Adresse e-mail PayPal"
+              value={formData.paypalEmail}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-300 rounded-md"
+            />
+          </div>
+        )}
+
+        {/* Bouton de confirmation */}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={handleConfirmOrder}
+            className="bg-orange-400 text-white py-2 px-6 rounded-md hover:bg-orange-500"
+          >
+            Confirmer la commande
+          </button>
+        </div>
+
+        {/* Retour à la page d'accueil */}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={handleGoHome}
+            className="bg-gray-300 text-gray-800 py-2 px-6 rounded-md hover:bg-gray-400"
+          >
+            Retour à l'accueil
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

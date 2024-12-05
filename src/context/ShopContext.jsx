@@ -146,9 +146,12 @@ export const ShopContextProvider = ({ children }) => {
       }
       return total;
     }, 0);
-
-    return totalPrice + delivery_fee;
+  
+    const totalWithDelivery = totalPrice + delivery_fee;
+  
+    return parseFloat(totalWithDelivery.toFixed(2)); // Ensure it's a number, not a string
   };
+  
    const clearCart = () => {
     
     setCartItems({});

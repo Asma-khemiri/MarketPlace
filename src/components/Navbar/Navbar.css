@@ -3,7 +3,7 @@
   position: relative;
   z-index: 40;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: rgba(234, 143, 39, 0.25); /* Primary color with 40% opacity */
+  background-color:white; /* Primary color with 40% opacity */
   padding: 10px 0;
 }
 
@@ -132,7 +132,7 @@
   right: -5px; /* Ajustez la position horizontale */
   width: 20px; /* Taille du badge */
   height: 20px; /* Taille du badge */
-  background-color: (90deg, #f19d26, #ea5003);
+  background-color: black;
   color: white;
   border-radius: 50%;
   display: flex;
