@@ -54,7 +54,7 @@ const Header = () => {
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
                 {data.title}
               </h1>
-              <p className="text-lg md:text-2xl text-gray-300 mb-6">
+              <p className="text-lg md:text-2xl text-orange-300 mb-6">
                 {data.description}
               </p>
              
@@ -89,7 +89,7 @@ const Header = () => {
           <div
             key={idx}
             className={`w-3 h-3 rounded-full ${
-              currentIndex === idx ? "bg-blue-500" : "bg-gray-400"
+              currentIndex === idx ? "bg-orange-500" : "bg-gray-400"
             }`}
           />
         ))}

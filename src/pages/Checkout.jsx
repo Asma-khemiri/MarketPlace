@@ -244,6 +244,7 @@ const Checkout = () => {
           </div>
         </div>
 
+
         {/* Champs pour Carte Bancaire (MasterCard ou Visa) */}
         {(paymentMethod === 'Master Card' || paymentMethod === 'Visa Card') && (
           <div className="mt-6">
