@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { auth, db } from "./firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { PowerBIEmbed } from "powerbi-client-react";
 
 // Components
 import Navbar from "./components/Navbar/Navbar";
@@ -18,7 +19,7 @@ import Checkout from "./pages/Checkout";
 import AddProductForm from "./pages/AddProductForm";
 import MesProduits from "./pages/MesProduits";
 import EditProduct from "./pages/EditProduct";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./components/admin/Dashboard";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -105,7 +106,7 @@ const App = () => {
         <Route
           path="/ajouter-produit"
           element={
-            isAuthenticated && userRole === "user" ? (
+            isAuthenticated && (userRole === "user" || userRole === "admin") ? (
               <AddProductForm setProducts={setProducts} />
             ) : (
               <Navigate to="/" />
